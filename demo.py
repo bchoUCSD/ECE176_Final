@@ -1,5 +1,6 @@
-
+#python demo.py --img_indices 400 505 608 --img_dir /Users/bryan/Desktop/ECE176/final/landscape/color
 import argparse
+import os
 import matplotlib.pyplot as plt
 
 from model import *
@@ -7,53 +8,57 @@ from model.eccv16 import eccv16
 from model.sig17 import siggraph17
 from model.util import *
 
+def load_input_image(img_path):
+    return load_img(img_path)
+
+def get_input_image_path(img_dir, img_index):
+    return os.path.join(img_dir, f'{img_index}.jpg')
+
 parser = argparse.ArgumentParser()
-parser.add_argument('-i','--img_path', type=str, default='imgs/ansel_adams3.jpg')
-parser.add_argument('--use_gpu', action='store_true', help='whether to use GPU')
-parser.add_argument('-o','--save_prefix', type=str, default='saved', help='will save into this file with {eccv16.png, siggraph17.png} suffixes')
+parser.add_argument('--img_indices', type=int, nargs='+', default=[1, 2, 3], help='Indices of the input images (1.jpg, 2.jpg, ...)')
+parser.add_argument('--img_dir', type=str, default='landscape', help='Directory where the input images are located')
 opt = parser.parse_args()
 
-# load colorizers
-colorizer_eccv16 = eccv16(pretrained=True).eval()
-colorizer_siggraph17 = siggraph17(pretrained=True).eval()
-if(opt.use_gpu):
-	colorizer_eccv16.cuda()
-	colorizer_siggraph17.cuda()
+# Load colorizers
+colorizer_eccv16 = eccv16().eval()
+colorizer_siggraph17 = siggraph17().eval()
 
-# default size to process images is 256x256
-# grab L channel in both original ("orig") and resized ("rs") resolutions
-img = load_img(opt.img_path)
-(tens_l_orig, tens_l_rs) = preprocess_img(img, HW=(256,256))
-if(opt.use_gpu):
-	tens_l_rs = tens_l_rs.cuda()
+plt.figure(figsize=(12, 8))
 
-# colorizer outputs 256x256 ab map
-# resize and concatenate to original L channel
-img_bw = postprocess_tens(tens_l_orig, torch.cat((0*tens_l_orig,0*tens_l_orig),dim=1))
-out_img_eccv16 = postprocess_tens(tens_l_orig, colorizer_eccv16(tens_l_rs).cpu())
-out_img_siggraph17 = postprocess_tens(tens_l_orig, colorizer_siggraph17(tens_l_rs).cpu())
+for i, img_index in enumerate(opt.img_indices, start=1):
+    # Default size to process images is 256x256
+    # Grab L channel in both original ("orig") and resized ("rs") resolutions
+    img_path = get_input_image_path(opt.img_dir, img_index)
+    img = load_input_image(img_path)
+    (tens_l_orig, tens_l_rs) = preprocess_img(img, HW=(256, 256))
 
-plt.imsave('%s_eccv16.png'%opt.save_prefix, out_img_eccv16)
-plt.imsave('%s_siggraph17.png'%opt.save_prefix, out_img_siggraph17)
+    # Colorizer outputs 256x256 ab map
+    # Resize and concatenate to original L channel
+    img_bw = postprocess_tens(tens_l_orig, torch.cat((torch.zeros_like(tens_l_orig), torch.zeros_like(tens_l_orig)), dim=1))
+    out_img_eccv16 = postprocess_tens(tens_l_orig, colorizer_eccv16(tens_l_rs).cpu())
+    out_img_siggraph17 = postprocess_tens(tens_l_orig, colorizer_siggraph17(tens_l_rs).cpu())
 
-plt.figure(figsize=(12,8))
-plt.subplot(2,2,1)
-plt.imshow(img)
-plt.title('Original')
-plt.axis('off')
+    plt.subplot(4, 3, i)
+    plt.imshow(img)
+    plt.title(f'Original #{img_index}')
+    plt.axis('off')
 
-plt.subplot(2,2,2)
-plt.imshow(img_bw)
-plt.title('Input')
-plt.axis('off')
+    plt.subplot(4, 3, i + 3)
+    plt.imshow(img_bw)
+    plt.title(f'Grayscale #{img_index}')
+    plt.axis('off')
+    
 
-plt.subplot(2,2,3)
-plt.imshow(out_img_eccv16)
-plt.title('Output (ECCV 16)')
-plt.axis('off')
+    plt.subplot(4, 3, i + 6)
+    plt.imshow(out_img_siggraph17)
+    plt.title(f'SIGGRAPH 17 for #{img_index}')
+    plt.axis('off')
+    
+    plt.subplot(4, 3, i + 9)
+    plt.imshow(out_img_eccv16)
+    plt.title(f'ECCV16 17 for #{img_index}')
+    plt.axis('off')
+    
 
-plt.subplot(2,2,4)
-plt.imshow(out_img_siggraph17)
-plt.title('Output (SIGGRAPH 17)')
-plt.axis('off')
+plt.tight_layout()
 plt.show()

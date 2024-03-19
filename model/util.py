@@ -1,4 +1,3 @@
-
 from PIL import Image
 import numpy as np
 from skimage import color
@@ -33,7 +32,6 @@ def preprocess_img(img_rgb_orig, HW=(256,256), resample=3):
 def postprocess_tens(tens_orig_l, out_ab, mode='bilinear'):
 	# tens_orig_l 	1 x 1 x H_orig x W_orig
 	# out_ab 		1 x 2 x H x W
-
 	HW_orig = tens_orig_l.shape[2:]
 	HW = out_ab.shape[2:]
 

@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.utils.model_zoo as model_zoo
 
 class SIGGRAPHGenerator(nn.Module):
     def __init__(self, norm_layer=nn.BatchNorm2d, classes=529):
@@ -171,9 +172,8 @@ class SIGGRAPHGenerator(nn.Module):
 
         return out_reg*110.
 
-def siggraph17(pretrained=True):
+def siggraph17():
     model = SIGGRAPHGenerator()
-    if pretrained:
-        import torch.utils.model_zoo as model_zoo
-        model.load_state_dict(model_zoo.load_url('https://colorizers.s3.us-east-2.amazonaws.com/siggraph17-df00044c.pth', map_location='cpu', check_hash=True))
+    # loading pre trained
+    model.load_state_dict(model_zoo.load_url('https://colorizers.s3.us-east-2.amazonaws.com/siggraph17-df00044c.pth', map_location='cpu', check_hash=True))
     return model

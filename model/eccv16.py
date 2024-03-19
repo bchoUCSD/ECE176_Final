@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.utils.model_zoo as model_zoo
 
 class ECCVGenerator(nn.Module):
     def __init__(self, norm_layer=nn.BatchNorm2d):
@@ -104,9 +105,8 @@ class ECCVGenerator(nn.Module):
         return self.upsample4(out_reg) * 110.
         # return out_reg  # Note: we're not doing unnormalization here
 
-def eccv16(pretrained=True):
+def eccv16():
     model = ECCVGenerator()
-    if pretrained:
-        import torch.utils.model_zoo as model_zoo
-        model.load_state_dict(model_zoo.load_url('https://colorizers.s3.us-east-2.amazonaws.com/colorization_release_v2-9b330a0b.pth', map_location='cpu', check_hash=True))
+    # loading pre trained
+    model.load_state_dict(model_zoo.load_url('https://colorizers.s3.us-east-2.amazonaws.com/colorization_release_v2-9b330a0b.pth', map_location='cpu', check_hash=True))
     return model
