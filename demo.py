@@ -1,4 +1,3 @@
-#python demo.py --img_indices 400 505 608 --img_dir /Users/bryan/Desktop/ECE176/final/landscape/color
 import argparse
 import os
 import matplotlib.pyplot as plt
